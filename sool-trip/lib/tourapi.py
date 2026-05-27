@@ -16,7 +16,20 @@ from dotenv import load_dotenv
 load_dotenv()
 
 BASE_URL = "https://apis.data.go.kr/B551011/KorService2"
-API_KEY = os.getenv("PUBLIC_DATA_API_KEY", "")
+
+
+def _load_key() -> str:
+    """env > st.secrets 순으로 키 조회. Streamlit Cloud는 secrets가 env로 안 들어옴."""
+    v = os.getenv("PUBLIC_DATA_API_KEY", "")
+    if v:
+        return v
+    try:
+        return st.secrets.get("PUBLIC_DATA_API_KEY", "")
+    except Exception:
+        return ""
+
+
+API_KEY = _load_key()
 
 CONTENT_TYPES = {
     "관광지": 12,

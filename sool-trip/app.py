@@ -602,6 +602,22 @@ elif step == 5:
     meta = st.session_state.get("search_meta", {})
     region_keys = list(region_packs.keys())
 
+    # 진단: 좌표/날씨/명소가 비어있으면 원인 한눈에 보이게
+    no_coord = [k for k, d in region_packs.items() if not d.get("coord")]
+    no_days = [k for k, d in region_packs.items() if not d.get("days")]
+    no_spots = [k for k, d in region_packs.items() if not d.get("spots")]
+    if no_coord or len(no_days) == len(region_keys) or len(no_spots) == len(region_keys):
+        with st.expander("⚠️ 데이터 누락 진단 (클릭)", expanded=False):
+            if no_coord:
+                st.warning(f"좌표 못 받은 지역 {len(no_coord)}개: {', '.join(no_coord[:5])} → 거리·날씨 계산 불가")
+            if len(no_days) == len(region_keys) and region_keys:
+                st.warning("모든 지역 날씨 없음 → Open-Meteo 호출 실패 또는 좌표 부재")
+            if len(no_spots) == len(region_keys) and region_keys:
+                st.warning("모든 지역 명소 0건 → TourAPI 키 누락 또는 호출 실패 가능성")
+            from lib.tourapi import API_KEY as _tour_key
+            from lib.gemini import API_KEY as _gem_key
+            st.caption(f"키 상태 — TourAPI: {'✅' if _tour_key else '❌'}  Gemini: {'✅' if _gem_key else '❌'}")
+
     top_row = st.columns([3, 1, 1, 1])
     with top_row[0]:
         st.markdown(st.session_state.get("search_header", ""))

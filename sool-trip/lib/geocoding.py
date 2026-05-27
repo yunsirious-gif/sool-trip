@@ -1,11 +1,20 @@
-"""주소/지역명 → 좌표 변환. Nominatim(OpenStreetMap) + SQLite 캐시.
+"""주소/지역명 → 좌표 변환.
 
-Nominatim 정책: 최대 1 req/sec, User-Agent 필수. 캐시로 재호출을 최소화한다.
+조회 우선순위:
+  1. data/sigungu_coords.json (git에 commit된 정적 매핑 — 즉시)
+  2. SQLite geocache (런타임 캐시)
+  3. Nominatim (OpenStreetMap, 1 req/sec)
+
+Streamlit Cloud는 재배포마다 컨테이너가 새로 떠서 SQLite가 초기화되므로
+정적 JSON이 1순위로 와야 한다.
 """
 
 from __future__ import annotations
 
+import json
+import threading
 import time
+from pathlib import Path
 from typing import Optional
 
 import requests
@@ -15,7 +24,27 @@ from lib.db import get_conn
 
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 USER_AGENT = "sool-trip-app/0.1 (https://example.local)"
+_STATIC_PATH = Path(__file__).resolve().parent.parent / "data" / "sigungu_coords.json"
+
+_throttle_lock = threading.Lock()
 _last_call_ts = 0.0
+
+
+def _load_static() -> dict[str, tuple[float, float]]:
+    if not _STATIC_PATH.exists():
+        return {}
+    try:
+        raw = json.loads(_STATIC_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    out: dict[str, tuple[float, float]] = {}
+    for k, v in raw.items():
+        if isinstance(v, list) and len(v) == 2 and v[0] is not None:
+            out[k] = (float(v[0]), float(v[1]))
+    return out
+
+
+_STATIC: dict[str, tuple[float, float]] = _load_static()
 
 
 def _ensure_cache_table() -> None:
@@ -49,18 +78,24 @@ def _cache_put(query: str, latlon: tuple[float, float] | None) -> None:
 
 
 def _throttle() -> None:
+    """Nominatim 1 req/sec 정책 준수. 멀티스레드 안전."""
     global _last_call_ts
-    elapsed = time.time() - _last_call_ts
-    if elapsed < 1.1:
-        time.sleep(1.1 - elapsed)
-    _last_call_ts = time.time()
+    with _throttle_lock:
+        elapsed = time.time() - _last_call_ts
+        if elapsed < 1.1:
+            time.sleep(1.1 - elapsed)
+        _last_call_ts = time.time()
 
 
 def geocode(query: str) -> tuple[float, float] | None:
-    """주소/지역명을 좌표로. 캐시 우선, 미스시 Nominatim 호출 + 캐시."""
+    """주소/지역명을 좌표로. 정적 JSON → DB 캐시 → Nominatim 순."""
     query = query.strip()
     if not query:
         return None
+
+    if query in _STATIC:
+        return _STATIC[query]
+
     cached = _cache_get(query)
     if cached is not None:
         return cached
@@ -91,7 +126,7 @@ def geocode(query: str) -> tuple[float, float] | None:
 
 @st.cache_data(ttl=86400, show_spinner=False)
 def geocode_sigungu(sido: str, sigungu: str) -> tuple[float, float] | None:
-    """시/도 + 시/군/구 조합으로 좌표 조회 (Streamlit 캐시 + DB 캐시 2중)."""
+    """시/도 + 시/군/구 조합으로 좌표 조회 (정적 JSON + Streamlit 캐시 + DB 캐시 3중)."""
     if not sigungu:
         return geocode(sido)
     return geocode(f"{sigungu} {sido}")

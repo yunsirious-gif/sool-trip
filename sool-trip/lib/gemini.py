@@ -12,7 +12,19 @@ from google import genai
 
 load_dotenv()
 
-API_KEY = os.getenv("GEMINI_API_KEY", "")
+
+def _load_key() -> str:
+    """env > st.secrets 순으로 키 조회. Streamlit Cloud secrets는 env로 안 들어옴."""
+    v = os.getenv("GEMINI_API_KEY", "")
+    if v:
+        return v
+    try:
+        return st.secrets.get("GEMINI_API_KEY", "")
+    except Exception:
+        return ""
+
+
+API_KEY = _load_key()
 _client = genai.Client(api_key=API_KEY) if API_KEY else None
 
 
