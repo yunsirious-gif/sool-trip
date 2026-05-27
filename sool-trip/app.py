@@ -918,25 +918,19 @@ elif step == 5:
         with col_b:
             bv = data["breweries_v"]
             ba = data["breweries_all"]
-            if bv:
-                # 체험 가능 양조장만 표시
-                st.markdown(f"##### 체험 양조장 ({len(bv)}곳)")
-                if len(ba) > len(bv):
-                    st.caption(f"_이 지역 전체 양조장 {len(ba)}곳 중 체험 가능 {len(bv)}곳_")
-                b_rows = [{"이름": b.get("name", ""), "주소": b.get("address", "")}
-                           for b in bv[:8]]
-                st.dataframe(pd.DataFrame(b_rows), width="stretch",
-                              hide_index=True, height=320)
-            elif ba:
-                # 체험 불가지만 양조장 자체는 있는 경우
-                st.markdown(f"##### 양조장 ({len(ba)}곳, 체험 불가)")
-                st.caption("_이 지역 양조장은 일반 방문·체험을 운영하지 않습니다_")
-                b_rows = [{"이름": b.get("name", ""), "주소": b.get("address", "")}
-                           for b in ba[:8]]
+            n_v = len(bv)
+            n_a = len(ba)
+            st.markdown(f"##### 양조장 ({n_a}곳)")
+            if n_a:
+                st.caption(f"🟢 체험 가능 {n_v}곳  ·  ⚪ 체험 불가 {n_a - n_v}곳")
+                b_rows = [{
+                    "체험": "🟢" if b.get("visitable") else "⚪",
+                    "이름": b.get("name", ""),
+                    "주소": b.get("address", ""),
+                } for b in ba[:8]]
                 st.dataframe(pd.DataFrame(b_rows), width="stretch",
                               hide_index=True, height=320)
             else:
-                st.markdown("##### 양조장")
                 st.caption("_등록된 양조장 없음_")
         with col_p:
             st.markdown("##### 특산품 · 향토 음식")
