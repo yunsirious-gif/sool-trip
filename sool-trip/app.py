@@ -23,7 +23,7 @@ from lib.season import current_context
 from lib.theme import THEMES, Theme
 from lib.tourapi import CONTENT_TYPES, TourAPIError, fetch_by_area, fetch_festivals
 from lib.travel import haversine_km, quick_drive_estimate
-from lib.weather import forecast, summarize_period
+from lib.weather import forecast_safe, summarize_period
 
 st.set_page_config(
     page_title="여행",
@@ -245,7 +245,7 @@ def _best_origin(origins_with_coords, dest):
 def collect_region_data(sido_, sigungu_, origins_with_coords, sd, ed):
     coord = geocode_sigungu(sido_, sigungu_)
     best = _best_origin(origins_with_coords, coord)
-    days = forecast(coord[0], coord[1], sd, ed) if (coord and sd and ed) else []
+    days = forecast_safe(coord[0], coord[1], sd, ed) if (coord and sd and ed) else []
     area_code = TOURAPI_AREA_CODE.get(sido_)
     spots = []
     if area_code:

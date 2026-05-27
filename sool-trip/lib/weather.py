@@ -57,11 +57,12 @@ class DailyWeather:
                 f"강수 {self.precip_prob}% ({self.precip_mm:.1f}mm)")
 
 
-@st.cache_resource(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=1800, show_spinner=False)
 def forecast(lat: float, lon: float, start: date, end: date) -> list[DailyWeather]:
     """좌표 + 날짜 범위 → 일별 예보 리스트.
 
     Open-Meteo는 오늘부터 16일까지 지원. 과거/너무 먼 미래는 자동 클램프됨.
+    빈 결과는 캐시하지 않음 (API 일시 장애로 인한 영구 공란 방지).
     """
     if start > end:
         start, end = end, start
@@ -80,22 +81,47 @@ def forecast(lat: float, lon: float, start: date, end: date) -> list[DailyWeathe
             timeout=8,
         )
         r.raise_for_status()
-        data = r.json().get("daily", {})
-    except Exception:
-        return []
+        data = r.json().get("daily", {}) or {}
+    except Exception as e:
+        # 빈 결과가 캐시에 박히지 않도록 예외 전파 (forecast_safe가 잡음)
+        raise _NoCacheError(f"weather api failed: {e}") from e
 
-    days = data.get("time", [])
+    days = data.get("time", []) or []
+    if not days:
+        raise _NoCacheError("weather api returned empty")
+
+    def _g(key: str) -> list:
+        return data.get(key) or [None] * len(days)
+
+    tmin_l, tmax_l = _g("temperature_2m_min"), _g("temperature_2m_max")
+    pmm_l, pprob_l = _g("precipitation_sum"), _g("precipitation_probability_max")
+    code_l = _g("weather_code")
+
     out = []
     for i, dt in enumerate(days):
         out.append(DailyWeather(
             date=dt,
-            tmin=float(data["temperature_2m_min"][i] or 0),
-            tmax=float(data["temperature_2m_max"][i] or 0),
-            precip_mm=float(data["precipitation_sum"][i] or 0),
-            precip_prob=int(data["precipitation_probability_max"][i] or 0),
-            code=int(data["weather_code"][i] or 0),
+            tmin=float(tmin_l[i] if tmin_l[i] is not None else 0),
+            tmax=float(tmax_l[i] if tmax_l[i] is not None else 0),
+            precip_mm=float(pmm_l[i] if pmm_l[i] is not None else 0),
+            precip_prob=int(pprob_l[i] if pprob_l[i] is not None else 0),
+            code=int(code_l[i] if code_l[i] is not None else 0),
         ))
     return out
+
+
+class _NoCacheError(Exception):
+    """forecast 빈 결과를 캐시하지 않게 하기 위한 마커 예외."""
+
+
+def forecast_safe(lat: float, lon: float, start: date, end: date) -> list[DailyWeather]:
+    """forecast 래퍼: 실패해도 호출부에는 빈 리스트로 돌려준다."""
+    try:
+        return forecast(lat, lon, start, end)
+    except _NoCacheError:
+        return []
+    except Exception:
+        return []
 
 
 def summarize_period(days: list[DailyWeather]) -> str:

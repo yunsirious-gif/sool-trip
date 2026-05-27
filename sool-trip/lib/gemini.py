@@ -16,14 +16,14 @@ API_KEY = os.getenv("GEMINI_API_KEY", "")
 _client = genai.Client(api_key=API_KEY) if API_KEY else None
 
 
-# 모델 fallback — 한 모델 quota 초과 시 자동으로 다음 모델 시도
+# 모델 fallback — 한 모델 실패 시 자동으로 다음 모델 시도
+# 실재하는 최신 모델만 (Gemini 3.x는 존재하지 않음)
 MODELS_FALLBACK = [
-    "gemini-3.5-flash",        # 최신 flash (고성능, 기본)
-    "gemini-3.1-flash-lite",   # 최신 lite (빠르고 저렴)
-    "gemini-flash-latest",
-    "gemini-2.5-flash",
-    "gemini-flash-lite-latest",
+    "gemini-flash-latest",      # 항상 최신 flash로 자동 갱신
+    "gemini-2.5-flash",         # 현 최신 flash 고정 버전
+    "gemini-flash-lite-latest", # 빠르고 저렴
     "gemini-2.5-flash-lite",
+    "gemini-2.0-flash",
     "gemini-2.0-flash-lite",
 ]
 
@@ -41,12 +41,17 @@ def _generate(prompt: str) -> str:
             if text:
                 return text
             last_err = f"{model_name}: 빈 응답"
+            continue
         except Exception as e:
             msg = str(e)
             last_err = f"{model_name}: {msg[:200]}"
-            if "429" in msg or "quota" in msg.lower() or "exhausted" in msg.lower():
-                continue  # 다음 모델 시도
-            break  # 다른 에러는 즉시 중단
+            # 인증 에러는 다른 모델 시도해도 똑같이 실패 → 즉시 중단
+            if any(k in msg.lower() for k in (
+                "api key", "permission_denied", "unauthenticated", "invalid_argument",
+            )):
+                break
+            # 그 외 에러(404/모델 없음, 429/quota, 5xx 등)는 다음 모델 시도
+            continue
     st.session_state["_last_curate_error"] = last_err
     return ""
 def _format_brewery(b: dict) -> str:
