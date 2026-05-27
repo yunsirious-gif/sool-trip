@@ -922,9 +922,9 @@ elif step == 5:
             n_a = len(ba)
             st.markdown(f"##### 양조장 ({n_a}곳)")
             if n_a:
-                st.caption(f"🟢 체험 가능 {n_v}곳  ·  ⚪ 체험 불가 {n_a - n_v}곳")
+                st.caption(f"🟢 체험 가능 {n_v}곳  ·  ⚫ 체험 불가 {n_a - n_v}곳")
                 b_rows = [{
-                    "체험": "🟢" if b.get("visitable") else "⚪",
+                    "체험": "🟢" if b.get("visitable") else "⚫",
                     "이름": b.get("name", ""),
                     "주소": b.get("address", ""),
                 } for b in ba[:8]]
