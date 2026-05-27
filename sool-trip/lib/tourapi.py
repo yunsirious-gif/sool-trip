@@ -57,7 +57,7 @@ def _request(endpoint: str, params: dict[str, Any]) -> list[dict]:
         **params,
     }
     try:
-        resp = requests.get(f"{BASE_URL}/{endpoint}", params=full_params, timeout=10)
+        resp = requests.get(f"{BASE_URL}/{endpoint}", params=full_params, timeout=2.5)
         resp.raise_for_status()
         data = resp.json()
     except requests.RequestException as e:

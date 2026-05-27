@@ -356,6 +356,44 @@ def local_drink_recommendation(sido: str, sigungu: str) -> str:
     return text
 
 
+def ai_spot_recommendation(sido: str, sigungu: str) -> str:
+    """공식 명소 데이터를 못 받을 때만 쓰는 AI 명소 추천.
+
+    엄격한 가드: 실재 확인이 어려운 곳은 추천하지 말 것.
+    출력은 항상 '참고용'으로 사용됨을 전제.
+    """
+    if not API_KEY:
+        return ""
+    prompt = f"""당신은 한국 여행 명소 큐레이터입니다.
+'{sido} {sigungu}'의 대표 관광 명소를 알려주세요.
+
+**⚠️ 매우 엄격한 규칙 — 반드시 지킬 것**:
+- **실재가 100% 확실한 곳만** 적으세요. 조금이라도 모르면 빼세요.
+- 정확한 이름·위치를 모르면 절대 만들어내지 마세요.
+- 한국 어디서나 흔한 시설(일반 카페·편의점 등)은 적지 마세요.
+- 그 지역의 시그니처 명소(국립공원·역사 유적·자연경관·박물관 등)만.
+- 추천할 만한 게 정말 없으면 정확히 "없음"이라고만 답하세요.
+
+있으면 3~5곳, 다음 형식으로 (간결하게):
+**🏞️ [명소 이름]**
+- 어떤 곳인지 (한 줄)
+- 위치 단서: 시/군/구 내 어느 지역, 또는 가까운 큰 시설
+
+마지막에 **"⚠️ 방문 전 검색 권장"** 한 줄 첨부.
+
+없으면 정확히 다음만 출력:
+없음
+"""
+    _g_text = _generate(prompt)
+    text = (_g_text or "").strip()
+    if not text or text == "없음":
+        return ""
+    last_line = text.split("\n")[-1].strip()
+    if last_line == "없음" or last_line.endswith("없음"):
+        return ""
+    return text
+
+
 def regional_specialty(sido: str, sigungu: str) -> str:
     """그 지역의 특산품 + 향토 먹거리. 유명한 게 없으면 빈 문자열 반환.
 

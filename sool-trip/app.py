@@ -15,9 +15,10 @@ from lib.auth import gate
 from lib.brewery import (find_breweries, find_regional_products,
                           get_brewery_products)
 from lib.db import get_conn
-from lib.gemini import (build_prompt, curate_destinations, generate_course,
-                          local_drink_recommendation, regional_specialty,
-                          sort_drinks_recommended, weather_aware_plan)
+from lib.gemini import (ai_spot_recommendation, build_prompt, curate_destinations,
+                          generate_course, local_drink_recommendation,
+                          regional_specialty, sort_drinks_recommended,
+                          weather_aware_plan)
 from lib.geo import TOURAPI_AREA_CODE, list_sido, list_sigungu
 from lib.geocoding import geocode, geocode_sigungu
 from lib.season import current_context
@@ -872,7 +873,18 @@ elif step == 5:
                 st.dataframe(pd.DataFrame(spot_rows), width="stretch",
                               hide_index=True, height=320)
             else:
-                st.caption("_등록된 명소 없음_")
+                # 공식 데이터 미수신 → AI 참고용 추천 (캐시)
+                ai_spot_key = f"ai_spots_{selected_key}"
+                if ai_spot_key not in st.session_state:
+                    with st.spinner("AI 참고 추천 작성 중…"):
+                        st.session_state[ai_spot_key] = ai_spot_recommendation(
+                            data["sido"], data["sigungu"])
+                ai_text = st.session_state[ai_spot_key]
+                if ai_text:
+                    st.caption("🤖 _공식 데이터 미수신 — AI 참고 추천 (방문 전 검색 권장)_")
+                    st.markdown(ai_text)
+                else:
+                    st.caption("_등록된 명소 없음_")
         with col_d:
             st.markdown("##### 이 지역의 술 *(추천 시음 순서)*")
             if data["drinks"]:
