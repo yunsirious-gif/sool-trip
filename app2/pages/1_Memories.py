@@ -7,9 +7,11 @@ from datetime import date
 import pandas as pd
 import streamlit as st
 
+from lib.auth import gate
 from lib.memory import add_memory, delete_memory, list_memories
 
 st.set_page_config(page_title="여행 추억", page_icon="📔", layout="wide")
+gate()
 st.markdown(
     "<style>[data-testid='stSidebarNav']{display:none;}</style>",
     unsafe_allow_html=True,

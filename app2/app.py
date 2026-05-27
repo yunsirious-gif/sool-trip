@@ -10,6 +10,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
+from lib.auth import gate
 from lib.brewery import (find_breweries, find_regional_products,
                           get_brewery_products)
 from lib.db import get_conn
@@ -30,6 +31,8 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+gate()
 
 st.markdown(
     "<style>[data-testid='stSidebarNav']{display:none;}</style>",

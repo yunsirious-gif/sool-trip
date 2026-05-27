@@ -6,12 +6,14 @@ import pandas as pd
 import pydeck as pdk
 import streamlit as st
 
+from lib.auth import gate
 from lib.gemini import _generate
 from lib.geocoding import geocode
 from lib.wishlist import (CATEGORIES, add_item, delete_item, init_table,
                             list_items, list_regions, toggle_visited)
 
 st.set_page_config(page_title="가고 싶은 여행지", page_icon="💝", layout="wide")
+gate()
 st.markdown(
     "<style>[data-testid='stSidebarNav']{display:none;}</style>",
     unsafe_allow_html=True,
