@@ -1,3 +1,4 @@
+# sool-trip dependencies
 streamlit>=1.40
 pandas>=2.0
 requests>=2.31
