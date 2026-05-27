@@ -1,0 +1,9 @@
+.streamlit/secrets.toml
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+pdfs/
+screenshots/
+briefing_app.db
+.venv/

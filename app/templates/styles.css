@@ -1,0 +1,77 @@
+@page {
+  size: A4;
+  margin: 14mm 12mm 16mm 12mm;
+  @bottom-center {
+    content: "부산브리핑 · " counter(page) " / " counter(pages);
+    font-size: 9pt;
+    color: #6b7280;
+  }
+}
+
+body {
+  font-family: "Malgun Gothic", "Noto Sans CJK KR", "Noto Sans KR", sans-serif;
+  font-size: 10pt;
+  color: #111827;
+  line-height: 1.45;
+  margin: 0;
+}
+
+h1 { font-size: 18pt; margin: 0 0 4pt; color: #1f3a8a; }
+h2 { font-size: 13pt; margin: 14pt 0 6pt; color: #1f3a8a; border-bottom: 1px solid #e5e7eb; padding-bottom: 3pt; }
+h3 { font-size: 11pt; margin: 8pt 0 4pt; color: #374151; }
+.muted { color: #6b7280; font-size: 9pt; }
+
+.header {
+  border-bottom: 2px solid #1f3a8a;
+  padding-bottom: 6pt;
+  margin-bottom: 10pt;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6pt;
+  margin: 6pt 0 10pt;
+}
+.info-grid .cell {
+  background: #f3f4f6;
+  padding: 6pt 8pt;
+  border-radius: 4pt;
+}
+.info-grid .label { font-size: 8pt; color: #6b7280; }
+.info-grid .value { font-size: 11pt; font-weight: 600; color: #111827; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9pt;
+  margin: 4pt 0 8pt;
+}
+th, td {
+  border-bottom: 1px solid #e5e7eb;
+  padding: 4pt 6pt;
+  text-align: left;
+}
+th { background: #f9fafb; font-weight: 600; }
+td.num { text-align: right; }
+
+.chart { margin: 4pt 0 8pt; }
+.chart img { width: 100%; max-height: 180pt; object-fit: contain; }
+
+.footer-watermark {
+  margin-top: 12pt;
+  padding-top: 6pt;
+  border-top: 1px solid #e5e7eb;
+  font-size: 8pt;
+  color: #6b7280;
+}
+
+.infra-row { display: flex; gap: 8pt; flex-wrap: wrap; }
+.infra-pill {
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 4pt;
+  padding: 4pt 8pt;
+  font-size: 9pt;
+}
+.infra-pill b { color: #1f3a8a; }

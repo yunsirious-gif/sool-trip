@@ -1,0 +1,25 @@
+# DB 원본 파일은 git에 안 올림
+# (zip만 push, 학습자는 02_데이터베이스/압축/bptc_all.zip을 같은 폴더에서 풀면 됨)
+02_데이터베이스/bptc_busan.db
+02_데이터베이스/bptc_stocks.db
+02_데이터베이스/bptc_realestate.db
+
+# 시스템 파일
+.DS_Store
+*.log
+
+# API 키 등 비밀 (전역 안전벨트)
+.env
+**/.env
+**/.streamlit/secrets.toml
+
+# 파이썬 잡파일
+**/__pycache__/
+*.pyc
+**/.pytest_cache/
+
+# 생성되는 DB (학습자는 scripts/load_data.py로 생성)
+app2/data/breweries.db
+
+# OMC 잡파일
+.omc/
