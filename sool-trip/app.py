@@ -848,7 +848,8 @@ elif step == 5:
         with metric_cols[3]:
             st.metric("🏭 체험 양조장",
                        f"{len(data['breweries_v'])}곳",
-                       f"전체 {len(data['breweries_all'])}곳")
+                       f"전체 {len(data['breweries_all'])}곳",
+                       delta_color="off")
 
         if data["days"]:
             with st.expander("📅 일자별 날씨"):
