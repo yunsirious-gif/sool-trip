@@ -10,7 +10,7 @@ Gemini AI가 취향에 맞춰 **하루 코스**를 짜주는 Streamlit 앱.
 
 ## 설치
 ```bash
-cd app2
+cd sool-trip
 pip install -r requirements.txt
 ```
 
@@ -27,7 +27,7 @@ streamlit run app.py
 
 ## 폴더 구조
 ```
-app2/
+sool-trip/
 ├── app.py                # 홈 (지역 선택)
 ├── pages/
 │   ├── 1_지역_탐색.py    # 양조장·관광지·맛집·축제 4탭
@@ -48,7 +48,7 @@ app2/
 1. **GitHub 레포 만들기** — 이 폴더(또는 상위 폴더)를 push.
    `.env` / `data/breweries.db`는 `.gitignore`로 제외됨 (DB는 첫 실행 시 자동 빌드).
 2. **https://share.streamlit.io** 접속 → **New app**.
-3. 레포 / 브랜치 선택, **Main file path**: `app2/app.py` (저장소 루트가 `bptc-data-pack-main`인 경우).
+3. 레포 / 브랜치 선택, **Main file path**: `sool-trip/app.py` (저장소 루트가 `bptc-data-pack-main`인 경우).
 4. **Advanced settings → Secrets** 에 아래 두 줄 붙여넣기:
    ```toml
    GEMINI_API_KEY = "발급받은_키"

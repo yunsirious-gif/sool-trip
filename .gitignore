@@ -19,7 +19,7 @@
 **/.pytest_cache/
 
 # 생성되는 DB (학습자는 scripts/load_data.py로 생성)
-app2/data/breweries.db
+sool-trip/data/breweries.db
 
 # OMC 잡파일
 .omc/
