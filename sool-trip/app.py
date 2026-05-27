@@ -249,13 +249,18 @@ def collect_region_data(sido_, sigungu_, origins_with_coords, sd, ed):
     days = forecast_safe(coord[0], coord[1], sd, ed) if (coord and sd and ed) else []
     area_code = TOURAPI_AREA_CODE.get(sido_)
     spots = []
+    raw_spot_count = 0
+    tour_err = ""
     if area_code:
         try:
-            spots = fetch_by_area(area_code, CONTENT_TYPES["관광지"], rows=30)
-            spots = [s for s in spots
+            raw = fetch_by_area(area_code, CONTENT_TYPES["관광지"], rows=30)
+            raw_spot_count = len(raw)
+            spots = [s for s in raw
                       if sigungu_ in (s.get("addr1", "") + s.get("addr2", ""))]
-        except TourAPIError:
-            pass
+        except TourAPIError as e:
+            tour_err = str(e)
+        except Exception as e:
+            tour_err = f"{type(e).__name__}: {e}"
     return {
         "sido": sido_, "sigungu": sigungu_,
         "coord": coord,
@@ -267,6 +272,8 @@ def collect_region_data(sido_, sigungu_, origins_with_coords, sd, ed):
         "breweries_v": find_breweries(sido_, sigungu_, visitable_only=True),
         "breweries_all": find_breweries(sido_, sigungu_, visitable_only=False),
         "area_code": area_code,
+        "_tour_err": tour_err,
+        "_raw_spot_count": raw_spot_count,
     }
 
 
@@ -617,6 +624,23 @@ elif step == 5:
             from lib.tourapi import API_KEY as _tour_key
             from lib.gemini import API_KEY as _gem_key
             st.caption(f"키 상태 — TourAPI: {'✅' if _tour_key else '❌'}  Gemini: {'✅' if _gem_key else '❌'}")
+
+            # TourAPI 호출 에러 표시 (지역마다 다를 수 있으니 첫 비어있지 않은 것)
+            tour_errs = [(k, d.get("_tour_err"), d.get("_raw_spot_count", 0))
+                          for k, d in region_packs.items() if d.get("_tour_err")]
+            if tour_errs:
+                st.error(f"TourAPI 에러 발생 ({len(tour_errs)}/{len(region_keys)}개 지역)")
+                k, msg, _ = tour_errs[0]
+                st.code(f"[{k}] {msg}", language="text")
+            else:
+                # 에러는 없는데 명소 0 → 응답은 왔지만 필터에서 다 걸러진 케이스
+                raw_total = sum(d.get("_raw_spot_count", 0) for d in region_packs.values())
+                any_area = next((d.get("area_code") for d in region_packs.values()
+                                  if d.get("area_code")), None)
+                if raw_total > 0:
+                    st.info(f"TourAPI는 총 {raw_total}건 받았지만 시군구 이름 필터에서 모두 제외됨 → 주소 파싱 문제")
+                elif any_area:
+                    st.warning(f"TourAPI 응답이 0건 — area_code 매핑 또는 API 응답 형식 문제 (예: area_code={any_area})")
 
     top_row = st.columns([3, 1, 1, 1])
     with top_row[0]:
