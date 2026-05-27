@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -513,17 +514,22 @@ elif step == 4:
         st.stop()
 
     with st.spinner("지역별 명소·술·양조장·날씨 모으는 중…"):
+        valid_picks = [p for p in picks if p.get("sido") and p.get("sigungu")]
+        # 외부 API(weather/tourapi)는 IO 바운드 → 지역별 병렬 호출
+        def _collect(p):
+            return p, collect_region_data(
+                p["sido"], p["sigungu"], origins_with_coords, start_d, end_d
+            )
         region_packs = {}
-        for p in picks:
-            s_, sg_ = p.get("sido", ""), p.get("sigungu", "")
-            if not s_ or not sg_:
-                continue
-            key = f"{s_} {sg_}"
-            region_packs[key] = {
-                **collect_region_data(s_, sg_, origins_with_coords, start_d, end_d),
-                "reason": p.get("reason", ""),
-                "highlights": p.get("highlights", ""),
-            }
+        max_workers = min(len(valid_picks), 8) or 1
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            for p, data in pool.map(_collect, valid_picks):
+                key = f"{p['sido']} {p['sigungu']}"
+                region_packs[key] = {
+                    **data,
+                    "reason": p.get("reason", ""),
+                    "highlights": p.get("highlights", ""),
+                }
 
     if selected_themes:
         theme_label = " + ".join(t.label for t in selected_themes)
